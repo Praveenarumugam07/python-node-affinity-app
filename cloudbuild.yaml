@@ -1,0 +1,33 @@
+steps:
+# Step 1: (Optional) Create Artifact Registry repository if not exists
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'bash'
+  args:
+    - -c
+    - |
+      gcloud artifacts repositories describe python-app-repo \
+        --location=asia-south1 || \
+      gcloud artifacts repositories create python-app-repo \
+        --repository-format=docker \
+        --location=asia-south1 \
+        --description="Repository for frontend and backend images"
+
+# Step 2: Build frontend image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'asia-south1-docker.pkg.dev/$PROJECT_ID/python-app-repo/frontend:latest', './frontend']
+
+# Step 3: Push frontend image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'asia-south1-docker.pkg.dev/$PROJECT_ID/python-app-repo/frontend:latest']
+
+# Step 4: Build backend image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'asia-south1-docker.pkg.dev/$PROJECT_ID/python-app-repo/backend:latest', './backend']
+
+# Step 5: Push backend image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'asia-south1-docker.pkg.dev/$PROJECT_ID/python-app-repo/backend:latest']
+
+images:
+- 'asia-south1-docker.pkg.dev/$PROJECT_ID/python-app-repo/frontend:latest'
+- 'asia-south1-docker.pkg.dev/$PROJECT_ID/python-app-repo/backend:latest'
